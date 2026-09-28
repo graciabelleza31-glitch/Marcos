@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Registrar Producto')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('productos')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <div class="d-flex align-items-center mb-3">
+                <a th:href="@{/productos}" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h3 class="mb-0">
+                        <span th:if="${producto.idProd == null}">Registrar Producto</span>
+                        <span th:if="${producto.idProd != null}">Editar Producto</span>
+                    </h3>
+                    <small class="text-muted">Complete la información del producto</small>
+                </div>
+            </div>
+
+            <form th:action="@{/productos/guardar}" th:object="${producto}"
+                  method="post" enctype="multipart/form-data"
+                  class="card shadow-sm p-4">
+
+                <input type="hidden" th:field="*{idProd}"/>
+
+                <div class="row g-4">
+
+                    <!-- ============ COLUMNA IZQUIERDA ============ -->
+                    <div class="col-md-4">
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del producto *</label>
+                            <input type="text" th:field="*{nomProd}" class="form-control" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Categoría *</label>
+                            <select th:field="*{idCat}" class="form-select" required>
+                                <option value="">-- Seleccionar --</option>
+                                <option th:each="c : ${categorias}"
+                                        th:value="${c.idCat}"
+                                        th:text="${c.nomCat}"></option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Proveedor *</label>
+                            <select th:field="*{idProv}" class="form-select" required>
+                                <option value="">-- Seleccionar --</option>
+                                <option th:each="p : ${proveedores}"
+                                        th:value="${p.idProv}"
+                                        th:text="${p.nomProv}"></option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Precio de compra (S/) *</label>
+                            <input type="number" step="0.01" min="0"
+                                   th:field="*{precioCompra}" class="form-control" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Precio de venta (S/) *</label>
+                            <input type="number" step="0.01" min="0"
+                                   th:field="*{precioVenta}" class="form-control" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea th:field="*{descProd}" rows="4" class="form-control"
+                                      placeholder="Descripción del producto..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ============ COLUMNA CENTRAL ============ -->
+                    <div class="col-md-4">
+
+                        <div class="mb-3">
+                            <label class="form-label">Código del producto</label>
+                            <input type="text" th:field="*{codProd}" class="form-control"
+                                   placeholder="Ej: P001"/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Stock actual *</label>
+                            <input type="number" min="0" th:field="*{stockProd}"
+                                   class="form-control" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Stock mínimo *</label>
+                            <input type="number" min="0" th:field="*{stockMinimo}"
+                                   class="form-control" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Unidad de medida</label>
+                            <select th:field="*{unidadMedida}" class="form-select">
+                                <option value="">-- Seleccionar --</option>
+                                <option value="Unidad">Unidad</option>
+                                <option value="Kilogramo">Kilogramo</option>
+                                <option value="Litro">Litro</option>
+                                <option value="Caja">Caja</option>
+                                <option value="Paquete">Paquete</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Estado</label>
+                            <select th:field="*{estado}" class="form-select">
+                                <option value="Activo">Activo</option>
+                                <option value="Inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ============ PANEL IMAGEN (DERECHA) ============ -->
+                    <div class="col-md-4">
+                        <div class="card bg-light border-0 h-100">
+                            <div class="card-body text-center d-flex flex-column justify-content-center">
+
+                            <label class="form-label fw-semibold mb-3">
+                                Imagen del producto
+                            </label>
+
+                            <!-- Vista previa -->
+                            <div class="border rounded bg-white d-flex align-items-center
+                                justify-content-center mb-3"
+                            style="height:220px; overflow:hidden;">
+
+                            <img id="preview"
+                            th:src="${producto.imagen != null ? '/images/' + producto.imagen : ''}"
+                            alt="Vista previa"
+                            class="img-fluid rounded"
+                            style="max-height:200px;"
+                            th:style="${producto.imagen == null ? 'display:none;' : ''}"/>
+
+                            <i id="placeholder" class="bi bi-image text-muted"
+                            style="font-size:4rem;"
+                            th:style="${producto.imagen != null ? 'display:none;' : ''}"></i>
+                        </div>
+
+                        <!-- Combo de imágenes disponibles -->
+                        <select id="selectImagen" class="form-select"
+                            th:field="*{imagen}"
+                            onchange="cambiarImagen(this.value);">
+                        <option value="">-- Seleccionar imagen --</option>
+                        <option th:each="img : ${imagenes}"
+                            th:value="${img}"
+                            th:text="${img}"></option>
+                        </select>
+
+                        <small class="text-muted mt-2">
+                        Selecciona una imagen del catálogo
+                        </small>
+                    </div>
+                </div>
+            
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <a th:href="@{/productos}" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Producto
+                    </button>
+                </div>
+            </form>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<script>
+    function cambiarImagen(nombre) {
+        const img = document.getElementById('preview');
+        const placeholder = document.getElementById('placeholder');
+
+        if (nombre && nombre.trim() !== '') {
+            img.src = '/images/' + nombre;
+            img.style.display = 'block';
+            placeholder.style.display = 'none';
+        } else {
+            img.src = '';
+            img.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+    }
+
+    // Al cargar la página (edición), forzar la vista previa por si el navegador cachea
+    document.addEventListener('DOMContentLoaded', function () {
+        const select = document.getElementById('selectImagen');
+        if (select && select.value) {
+            cambiarImagen(select.value);
+        }
+    });
+</script>
+
+</body>
+</html>

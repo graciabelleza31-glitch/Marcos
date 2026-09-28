@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Boleta de Venta')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar('ventas')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+        <main class="flex-grow-1 p-4 d-flex justify-content-center">
+
+            <div class="card shadow-sm border p-4 bg-white" style="max-width: 650px; width: 100%;">
+                
+                <div class="text-center pb-3 border-bottom">
+                    <h4 class="fw-bold mb-0">TIENDA DE ABARROTES</h4>
+                    <small class="text-muted">RUC: 20456789123</small><br/>
+                    <small class="text-muted">Av. Universitaria 1234 - Lima</small>
+                    <h5 class="mt-2 fw-bold text-primary">BOLETA DE VENTA ELECTRÓNICA</h5>
+                    <span class="badge bg-dark" th:text="'B001-' + ${#numbers.formatInteger(venta.idVenta, 6)}"></span>
+                </div>
+
+                <div class="row my-3 small">
+                    <div class="col-6">
+                        <strong>Fecha:</strong> <span th:text="${venta.fecVenta}"></span><br/>
+                        <strong>Cliente:</strong> <span th:text="${venta.nomCliente}"></span><br/>
+                        <strong>Doc:</strong> <span th:text="${venta.numDocumentoCliente != null && !venta.numDocumentoCliente.isBlank() ? venta.numDocumentoCliente : 'Sin Doc'}"></span>
+                    </div>
+                    <div class="col-6 text-end">
+                        <strong>Medio de Pago:</strong> <span th:text="${venta.metodoPago}"></span><br/>
+                        <strong>Moneda:</strong> SOLES (S/)
+                    </div>
+                </div>
+
+                <table class="table table-sm border mt-2">
+                    <thead class="table-light small">
+                        <tr>
+                            <th>Cant.</th>
+                            <th>Descripción</th>
+                            <th class="text-end">P. Unit</th>
+                            <th class="text-end">Importe</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        <tr th:each="d : ${venta.detalles}">
+                            <td th:text="${d.cantDetalle}"></td>
+                            <td th:text="${d.nomProd}"></td>
+                            <td class="text-end" th:text="'S/ ' + ${#numbers.formatDecimal(d.precioUnitario, 1, 2)}"></td>
+                            <td class="text-end" th:text="'S/ ' + ${#numbers.formatDecimal(d.subtotal, 1, 2)}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="text-end mt-2 pt-2 border-top">
+                    <h4 class="fw-bold">Total: <span th:text="'S/ ' + ${#numbers.formatDecimal(venta.totalVenta, 1, 2)}"></span></h4>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a th:href="@{/ventas/nueva}" class="btn btn-outline-primary">
+                        <i class="bi bi-cart-plus me-1"></i> Nueva Venta
+                    </a>
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        <i class="bi bi-printer me-1"></i> Imprimir Boleta
+                    </button>
+                </div>
+
+            </div>
+
+        </main>
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

@@ -96,4 +96,34 @@ public class ProductoService {
     public void eliminar(Long id) {
         productos.removeIf(p -> p.getIdProd().equals(id));
     }
+
+    //STOCK BAJO
+    public List<Producto> obtenerStockBajo() {
+        return productos.stream()
+                .filter(Producto::isStockBajo)
+                .collect(Collectors.toList());
+    }
+
+    public int totalProductos() {
+        return productos.size();
+    }
+
+    //DESCONTAR STOCK
+    public synchronized void descontarStock(Long idProd, int cantidad) {
+        Producto p = obtener(idProd);
+        if (p.getStockProd() == null || p.getStockProd() < cantidad) {
+            throw new IllegalArgumentException("Stock insuficiente para: " + p.getNomProd() 
+                + " (Stock disponible: " + (p.getStockProd() == null ? 0 : p.getStockProd()) + ")");
+        }
+        p.setStockProd(p.getStockProd() - cantidad);
+    }
+
+    // AUMENTAR STOCK
+    public synchronized void aumentarStock(Long idProd, int cantidad) {
+        Producto p = obtener(idProd);
+        if (p.getStockProd() == null) {
+            p.setStockProd(0);
+        }
+        p.setStockProd(p.getStockProd() + cantidad);
+    }
 }

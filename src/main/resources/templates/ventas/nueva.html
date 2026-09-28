@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Registrar Venta')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('ventas')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <!-- Encabezado de la página -->
+            <div class="mb-3">
+                <h3 class="mb-0 fw-bold">CONSULTAR STOCK / REGISTRAR VENTA</h3>
+                <small class="text-muted">Consulte el stock disponible y registre ventas</small>
+            </div>
+
+            <!-- Alertas de error o éxito -->
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="row g-3">
+
+                <!-- =======================================================
+                     PANEL IZQUIERDO: CONSULTAR STOCK
+                     ======================================================= -->
+                <div class="col-lg-5">
+                    <div class="card shadow-sm border-0 h-100 p-3">
+                        <h5 class="fw-bold mb-3 text-secondary">CONSULTAR STOCK</h5>
+
+                        <!-- Buscador por texto -->
+                        <div class="input-group mb-2">
+                            <input type="text" id="buscarProd" class="form-control" 
+                                   placeholder="Buscar producto..." onkeyup="filtrarTablaStock()"/>
+                            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        </div>
+
+                        <!-- Filtros Categoría y Estado -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small text-muted mb-1">CATEGORÍA</label>
+                                <select id="filtroCat" class="form-select form-select-sm" onchange="filtrarTablaStock()">
+                                    <option value="">Todas</option>
+                                    <option th:each="c : ${categorias}" 
+                                            th:value="${c.nomCat}" 
+                                            th:text="${c.nomCat}"></option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-muted mb-1">ESTADO</label>
+                                <select id="filtroEstado" class="form-select form-select-sm" onchange="filtrarTablaStock()">
+                                    <option value="">Todos</option>
+                                    <option value="Activo">Activo</option>
+                                    <option value="Inactivo">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Tabla de Catálogo / Stock -->
+                        <div class="table-responsive flex-grow-1" style="max-height: 480px; overflow-y: auto;">
+                            <table class="table table-hover align-middle small" id="tablaStock">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th class="text-center" style="width: 50px;">IMAGEN</th>
+                                        <th>PRODUCTO</th>
+                                        <th>CATEGORÍA</th>
+                                        <th class="text-center" style="width: 70px;">STOCK</th>
+                                        <th class="text-center" style="width: 40px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="p : ${productos}" 
+                                        th:data-id="${p.idProd}"
+                                        th:data-nombre="${p.nomProd}"
+                                        th:data-precio="${p.precioVenta}"
+                                        th:data-stock="${p.stockProd}"
+                                        th:data-cat="${p.nomCat}"
+                                        th:data-estado="${p.estado}">
+                                        
+                                        <td class="text-center">
+                                            <img th:if="${p.imagen != null and !p.imagen.isBlank()}"
+                                                 th:src="@{'/images/' + ${p.imagen}}"
+                                                 alt="img"
+                                                 style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px;"/>
+                                            <i th:unless="${p.imagen != null and !p.imagen.isBlank()}"
+                                               class="bi bi-image text-muted fs-4"></i>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold prod-nombre" th:text="${p.nomProd}"></span><br>
+                                            <small class="text-muted" th:text="'S/ ' + ${#numbers.formatDecimal(p.precioVenta, 1, 2)}"></small>
+                                        </td>
+                                        <td class="prod-cat" th:text="${p.nomCat}"></td>
+                                        <td class="text-center">
+                                            <span class="badge" 
+                                                  th:classappend="${p.stockProd <= p.stockMinimo} ? 'bg-danger' : 'bg-secondary'"
+                                                  th:text="${p.stockProd}">0</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                                    title="Agregar a la venta"
+                                                    th:disabled="${p.stockProd <= 0 or p.estado == 'Inactivo'}"
+                                                    th:onclick="'agregarDesdeCatalogo(' + ${p.idProd} + ')'">
+                                                <i class="bi bi-plus-lg"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Contador inferior -->
+                        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top small text-muted">
+                            <span>TOTAL PRODUCTOS: <strong th:text="${#lists.size(productos)}"></strong></span>
+                            <span>Catálogo activo</span>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- =======================================================
+                     PANEL DERECHO: REGISTRAR VENTA
+                     ======================================================= -->
+                <div class="col-lg-7">
+                    <form th:action="@{/ventas/guardar}" method="post" id="formVenta" class="card shadow-sm border-0 h-100 p-3 d-flex flex-column justify-content-between">
+                        
+                        <div>
+                            <h5 class="fw-bold mb-3 text-secondary">REGISTRAR VENTA</h5>
+
+                            <!-- Cabecera de la venta: Nro Venta, Fecha, Vendedor -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted mb-1">NRO. DE VENTA</label>
+                                    <input type="text" name="nroVenta" class="form-control form-control-sm bg-light fw-bold" 
+                                           th:value="${nroVenta}" readonly/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted mb-1">FECHA</label>
+                                    <input type="text" class="form-control form-control-sm bg-light" 
+                                           th:value="${#temporals.format(fechaHoy, 'dd/MM/yyyy')}" readonly/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted mb-1">VENDEDOR</label>
+                                    <input type="text" class="form-control form-control-sm bg-light" 
+                                           th:value="${vendedor}" readonly/>
+                                </div>
+                            </div>
+
+                            <!-- Cliente y DNI/RUC en la misma fila -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-7">
+                                    <label class="form-label small text-muted mb-1">CLIENTE (OPCIONAL)</label>
+                                    <input type="text" name="nomCliente" id="inputCliente" class="form-control form-control-sm" 
+                                        placeholder="Nombre del cliente o razón social"/>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small text-muted mb-1">DNI / RUC (OPCIONAL)</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-light text-muted"><i class="bi bi-card-heading"></i></span>
+                                        <input type="text" name="numDocumentoCliente" id="inputDocumento" class="form-control form-control-sm" 
+                                            maxlength="11" placeholder="Ej: 71234567"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tabla de Productos a Vender -->
+                            <label class="form-label small text-muted mb-1">PRODUCTOS</label>
+                            <div class="table-responsive border rounded mb-2" style="min-height: 220px; max-height: 280px; overflow-y: auto;">
+                                <table class="table table-sm align-middle mb-0" id="tablaDetalles">
+                                    <thead class="table-light sticky-top small">
+                                        <tr>
+                                            <th>PRODUCTO</th>
+                                            <th style="width: 90px;" class="text-center">CANTIDAD</th>
+                                            <th style="width: 110px;" class="text-end">PRECIO UNITARIO</th>
+                                            <th style="width: 110px;" class="text-end">SUBTOTAL</th>
+                                            <th style="width: 45px;" class="text-center">ACCIÓN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cuerpoVenta">
+                                        <!-- Filas añadidas dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Botón + Agregar Producto -->
+                            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="agregarFilaVacia()">
+                                <i class="bi bi-plus"></i> AGREGAR PRODUCTO
+                            </button>
+                        </div>
+
+                        <!-- Resumen de Totales y Botones de Acción -->
+                        <div>
+                            <div class="row justify-content-end mb-3">
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between py-1 border-bottom small">
+                                        <span class="text-muted">SUBTOTAL:</span>
+                                        <span class="fw-semibold" id="lblSubtotal">S/ 0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-1 border-bottom small align-items-center">
+                                        <span class="text-muted">DESCUENTO:</span>
+                                        <div class="d-flex align-items-center" style="width: 100px;">
+                                            <span class="me-1">S/</span>
+                                            <input type="number" step="0.01" min="0" value="0.00" name="descuento" id="inputDescuento" 
+                                                   class="form-control form-control-sm text-end" onchange="calcularTotales()" onkeyup="calcularTotales()"/>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between py-2 fs-5 fw-bold text-dark">
+                                        <span>TOTAL:</span>
+                                        <span id="lblTotal">S/ 0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botones Limpiar y Finalizar Venta -->
+                            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                                <button type="button" class="btn btn-outline-secondary px-4" onclick="limpiarFormulario()">
+                                    LIMPIAR
+                                </button>
+                                <button type="submit" class="btn btn-dark px-4 fw-semibold">
+                                    FINALIZAR VENTA
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<!-- LÓGICA DE INTERACCIÓN Y CÁLCULO -->
+<script th:inline="javascript">
+    const catalogo = /*[[${productos}]]*/ [];
+
+    // Filtros del panel izquierdo (Consultar Stock)
+    function filtrarTablaStock() {
+        const texto = document.getElementById('buscarProd').value.toLowerCase();
+        const categoria = document.getElementById('filtroCat').value;
+        const estado = document.getElementById('filtroEstado').value;
+
+        const filas = document.querySelectorAll('#tablaStock tbody tr');
+        filas.forEach(tr => {
+            const nom = tr.getAttribute('data-nombre').toLowerCase();
+            const cat = tr.getAttribute('data-cat');
+            const est = tr.getAttribute('data-estado');
+
+            const coincideTexto = !texto || nom.includes(texto);
+            const coincideCat = !categoria || cat === categoria;
+            const coincideEstado = !estado || est === estado;
+
+            if (coincideTexto && coincideCat && coincideEstado) {
+                tr.style.display = '';
+            } else {
+                tr.style.display = 'none';
+            }
+        });
+    }
+
+    // Genera el HTML de opciones del select de productos
+    function generarOpcionesSelect(idSeleccionado) {
+        let html = '<option value="">Seleccionar producto</option>';
+        catalogo.forEach(p => {
+            const sel = (idSeleccionado && p.idProd == idSeleccionado) ? 'selected' : '';
+            html += `<option value="${p.idProd}" data-precio="${p.precioVenta}" data-stock="${p.stockProd}" ${sel}>${p.nomProd}</option>`;
+        });
+        return html;
+    }
+
+    // Agrega una fila en blanco al panel derecho
+    function agregarFilaVacia(idProdInicial = null) {
+        const tbody = document.getElementById('cuerpoVenta');
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+            <td>
+                <select name="idProd" class="form-select form-select-sm select-prod" required onchange="cambioProducto(this)">
+                    ${generarOpcionesSelect(idProdInicial)}
+                </select>
+            </td>
+            <td>
+                <input type="number" name="cantDetalle" class="form-control form-control-sm text-center cant-prod" 
+                       value="1" min="1" required onchange="calcularTotales()" onkeyup="calcularTotales()"/>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-0">S/</span>
+                    <input type="text" class="form-control form-control-sm text-end precio-prod bg-light" readonly value="0.00"/>
+                </div>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-0">S/</span>
+                    <input type="text" class="form-control form-control-sm text-end subtotal-prod bg-light fw-bold" readonly value="0.00"/>
+                </div>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="eliminarFila(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+
+        if (idProdInicial) {
+            const selectElem = tr.querySelector('.select-prod');
+            cambioProducto(selectElem);
+        }
+    }
+
+    // Agrega a la venta al hacer click en el botón '+' del catálogo izquierdo
+    function agregarDesdeCatalogo(idProd) {
+        // Verificar si ya está en la tabla para solo sumarle 1 a la cantidad
+        const selects = document.querySelectorAll('#cuerpoVenta .select-prod');
+        for (let sel of selects) {
+            if (sel.value == idProd) {
+                const fila = sel.closest('tr');
+                const cantInput = fila.querySelector('.cant-prod');
+                cantInput.value = parseInt(cantInput.value || 0) + 1;
+                calcularTotales();
+                return;
+            }
+        }
+        agregarFilaVacia(idProd);
+    }
+
+    // Al seleccionar un producto en el dropdown del panel derecho
+    function cambioProducto(selectElem) {
+        const fila = selectElem.closest('tr');
+        const opt = selectElem.options[selectElem.selectedIndex];
+        const precio = parseFloat(opt.getAttribute('data-precio') || 0);
+        const stock = parseInt(opt.getAttribute('data-stock') || 0);
+
+        fila.querySelector('.precio-prod').value = precio.toFixed(2);
+        const cantInput = fila.querySelector('.cant-prod');
+        cantInput.max = stock;
+
+        calcularTotales();
+    }
+
+    function eliminarFila(btn) {
+        btn.closest('tr').remove();
+        calcularTotales();
+    }
+
+    function calcularTotales() {
+        let subtotal = 0;
+        const filas = document.querySelectorAll('#cuerpoVenta tr');
+
+        filas.forEach(fila => {
+            const precio = parseFloat(fila.querySelector('.precio-prod').value) || 0;
+            const cant = parseInt(fila.querySelector('.cant-prod').value) || 0;
+            const filaSubtotal = precio * cant;
+
+            fila.querySelector('.subtotal-prod').value = filaSubtotal.toFixed(2);
+            subtotal += filaSubtotal;
+        });
+
+        const descuento = parseFloat(document.getElementById('inputDescuento').value) || 0;
+        const total = Math.max(0, subtotal - descuento);
+
+        document.getElementById('lblSubtotal').innerText = 'S/ ' + subtotal.toFixed(2);
+        document.getElementById('lblTotal').innerText = 'S/ ' + total.toFixed(2);
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('cuerpoVenta').innerHTML = '';
+        document.getElementById('inputCliente').value = '';
+        document.getElementById('inputDocumento').value = ''; // 
+        document.getElementById('inputDescuento').value = '0.00';
+        calcularTotales();
+        agregarFilaVacia();
+    }
+
+    // Inicializar con una fila vacía
+    document.addEventListener('DOMContentLoaded', () => {
+        agregarFilaVacia();
+    });
+</script>
+
+</body>
+</html>

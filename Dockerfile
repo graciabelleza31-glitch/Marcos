@@ -1,10 +1,14 @@
-# Etapa 1: Compilar la aplicación con Maven
-FROM maven:3.9.8-eclipse-temurin-17 AS build
-COPY . .
-RUN mvn clean package -DskipTests
+# Etapa 1: Compilar con Maven
+FROM maven:3.9.8-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -Dmaven.test.skip=true
 
-# Etapa 2: Crear la imagen final, más ligera
-FROM openjdk:17.0.1-jdk-slim
-COPY --from=build /target/proyecto-0.0.1-SNAPSHOT.jar app.jar
+# Etapa 2: Imagen final ligera
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

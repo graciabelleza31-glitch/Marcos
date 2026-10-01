@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Gráficos de Barras')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('barras')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <div class="mb-4">
+                <h3 class="mb-0 fw-bold">Nivel de Stock por Producto</h3>
+                <small class="text-muted">Comparativa entre Stock Actual y Stock Mínimo permitido</small>
+            </div>
+
+            <div class="card shadow-sm border-0 p-4 bg-white">
+                <div style="height: 420px; width: 100%;">
+                    <canvas id="chartBarras"></canvas>
+                </div>
+            </div>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+<!-- Librería Chart.js vía CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+    const etiquetas = /*[[${nombres}]]*/ [];
+    const datosActual = /*[[${stockActual}]]*/ [];
+    const datosMinimo = /*[[${stockMinimo}]]*/ [];
+
+    const ctx = document.getElementById('chartBarras').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: etiquetas,
+            datasets: [
+                {
+                    label: 'Stock Actual',
+                    data: datosActual,
+                    backgroundColor: 'rgba(13, 110, 253, 0.75)',
+                    borderColor: 'rgb(13, 110, 253)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Stock Mínimo (Límite)',
+                    data: datosMinimo,
+                    backgroundColor: 'rgba(220, 53, 69, 0.75)',
+                    borderColor: 'rgb(220, 53, 69)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Cantidad de Unidades' }
+                },
+                x: {
+                    title: { display: true, text: 'Productos' }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Categorías')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('categorias')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="mb-0">Categorías</h3>
+                    <small class="text-muted">Administración y clasificación del catálogo de productos</small>
+                </div>
+                <a th:href="@{/categorias/nuevo}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
+                </a>
+            </div>
+
+            <!-- Alertas -->
+            <div th:if="${msg}" class="alert alert-success alert-dismissible fade show">
+                <i class="bi bi-check-circle me-2"></i><span th:text="${msg}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${error}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Buscador -->
+            <form method="get" th:action="@{/categorias}" class="row g-2 mb-3">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="Buscar categoría por nombre o descripción..." th:value="${q}"/>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <a th:href="@{/categorias}" class="btn btn-outline-danger" title="Limpiar filtro">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </form>
+
+            <!-- Tabla de Categorías -->
+            <div class="card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th style="width: 250px;">Categoría</th>
+                                <th>Descripción</th>
+                                <th class="text-center" style="width: 260px;">Productos</th>
+                                <th class="text-center" style="width: 110px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="c, it : ${categorias}">
+                                <td th:text="${it.index + 1}"></td>
+                                <td>
+                                    <strong class="fs-6" th:text="${c.nomCat}"></strong>
+                                </td>
+                                <td class="text-muted" th:text="${c.descCat != null && !c.descCat.isBlank() ? c.descCat : 'Sin descripción'}"></td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <a th:href="@{/categorias/detalle/{id}(id=${c.idCat})}" 
+                                           class="btn btn-outline-primary" title="Ver lista de productos en esta categoría">
+                                            <i class="bi bi-boxes me-1"></i> Ver Productos
+                                        </a>
+                                        <a th:href="@{/productos/nuevo(idCat=${c.idCat})}" 
+                                           class="btn btn-success" title="Agregar producto directamente a esta categoría">
+                                            <i class="bi bi-plus-circle me-1"></i> + Producto
+                                        </a>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <a th:href="@{/categorias/editar/{id}(id=${c.idCat})}" 
+                                       class="btn btn-sm btn-outline-secondary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a th:href="@{/categorias/eliminar/{id}(id=${c.idCat})}" 
+                                       class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                       onclick="return confirm('¿Está seguro de eliminar esta categoría?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(categorias)}">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    No se encontraron categorías registradas
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

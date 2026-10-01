@@ -79,11 +79,16 @@ public class ProductoController {
 
     // FORM NUEVO → http://localhost:8080/productos/nuevo
     @GetMapping("/nuevo")
-    public String nuevo(Model model) {
-        model.addAttribute("producto", new Producto());
+    public String nuevo(@RequestParam(required = false) Long idCat, Model model) {
+        Producto nuevoProd = new Producto();
+        if (idCat != null) {
+            nuevoProd.setIdCat(idCat); // Asigna la categoría seleccionada por defecto
+        }
+
+        model.addAttribute("producto", nuevoProd);
         model.addAttribute("categorias", categoriaService.listar());
         model.addAttribute("proveedores", proveedorService.listar());
-        model.addAttribute("imagenes", imagenesDisponibles());   // ← NUEVO
+        model.addAttribute("imagenes", imagenesDisponibles());
         return "productos/formulario";
     }
 

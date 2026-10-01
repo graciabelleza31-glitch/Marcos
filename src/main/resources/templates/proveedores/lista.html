@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Proveedores')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('proveedores')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h3 class="mb-0">Proveedores</h3>
+                    <small class="text-muted">Gestión de distribuidores y empresas asociadas</small>
+                </div>
+                <a th:href="@{/proveedores/nuevo}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Nuevo Proveedor
+                </a>
+            </div>
+
+            <!-- Alerta de éxito -->
+            <div th:if="${msg}" class="alert alert-success alert-dismissible fade show">
+                <i class="bi bi-check-circle me-2"></i><span th:text="${msg}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Buscador -->
+            <form method="get" th:action="@{/proveedores}" class="row g-2 mb-3">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control" 
+                               placeholder="Buscar por nombre de empresa o RUC..." th:value="${q}"/>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <a th:href="@{/proveedores}" class="btn btn-outline-danger" title="Limpiar filtro">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </form>
+
+            <!-- Tabla de Proveedores -->
+            <div class="card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>Razón Social / Nombre</th>
+                                <th>RUC</th>
+                                <th>Teléfono</th>
+                                <th class="text-center" style="width: 120px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p, it : ${proveedores}">
+                                <td th:text="${it.index + 1}"></td>
+                                <td>
+                                    <strong th:text="${p.nomProv}"></strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border font-monospace" th:text="${p.rucProv}"></span>
+                                </td>
+                                <td th:text="${p.telProv}"></td>
+                                <td class="text-center">
+                                    <a th:href="@{/proveedores/editar/{id}(id=${p.idProv})}" 
+                                       class="btn btn-sm btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a th:href="@{/proveedores/eliminar/{id}(id=${p.idProv})}" 
+                                       class="btn btn-sm btn-outline-danger" title="Eliminar"
+                                       onclick="return confirm('¿Está seguro de eliminar este proveedor?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(proveedores)}">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    No se encontraron proveedores registrados
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

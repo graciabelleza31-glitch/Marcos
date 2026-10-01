@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="~{fragments/layout :: head('Productos por Categoría')}"></head>
+
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<div class="d-flex">
+
+    <nav th:replace="~{fragments/layout :: sidebar('categorias')}"></nav>
+
+    <div class="flex-grow-1 d-flex flex-column min-vh-100">
+
+        <main class="flex-grow-1 p-4">
+
+            <!-- Cabecera con retorno y botón de acción -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex align-items-center">
+                    <a th:href="@{/categorias}" class="btn btn-outline-secondary me-3">
+                        <i class="bi bi-arrow-left"></i>
+                    </a>
+                    <div>
+                        <h3 class="mb-0">
+                            Categoría: <span class="text-primary fw-bold" th:text="${categoria.nomCat}"></span>
+                        </h3>
+                        <small class="text-muted" th:text="${categoria.descCat != null ? categoria.descCat : ''}"></small>
+                    </div>
+                </div>
+
+                <a th:href="@{/productos/nuevo(idCat=${categoria.idCat})}" class="btn btn-success">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar Producto a esta Categoría
+                </a>
+            </div>
+
+            <!-- Tabla de productos pertenecientes a la categoría -->
+            <div class="card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th class="text-center" style="width: 70px;">Imagen</th>
+                                <th>Código</th>
+                                <th>Producto</th>
+                                <th>Proveedor</th>
+                                <th class="text-end">P. Venta</th>
+                                <th class="text-center">Stock</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-center" style="width: 100px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p, it : ${productos}">
+                                <td th:text="${it.index + 1}"></td>
+                                <td class="text-center">
+                                    <img th:if="${p.imagen != null and !p.imagen.isBlank()}"
+                                         th:src="@{'/images/' + ${p.imagen}}"
+                                         alt="img"
+                                         style="width: 38px; height: 38px; object-fit: cover; border-radius: 4px;"/>
+                                    <i th:unless="${p.imagen != null and !p.imagen.isBlank()}"
+                                       class="bi bi-image text-muted fs-5"></i>
+                                </td>
+                                <td th:text="${p.codProd}"></td>
+                                <td>
+                                    <strong th:text="${p.nomProd}"></strong>
+                                </td>
+                                <td th:text="${p.nomProv}"></td>
+                                <td class="text-end fw-semibold" th:text="'S/ ' + ${#numbers.formatDecimal(p.precioVenta, 1, 2)}"></td>
+                                <td class="text-center">
+                                    <span class="badge" 
+                                          th:classappend="${p.stockProd <= p.stockMinimo} ? 'bg-danger' : 'bg-secondary'"
+                                          th:text="${p.stockProd}">0</span>
+                                </td>
+                                <td class="text-center">
+                                    <span th:if="${p.estado == 'Activo'}" class="badge bg-success">Activo</span>
+                                    <span th:if="${p.estado == 'Inactivo'}" class="badge bg-secondary">Inactivo</span>
+                                </td>
+                                <td class="text-center">
+                                    <a th:href="@{/productos/editar/{id}(id=${p.idProd})}" 
+                                       class="btn btn-sm btn-outline-primary" title="Editar producto">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(productos)}">
+                                <td colspan="9" class="text-center text-muted py-5">
+                                    <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                    Esta categoría aún no tiene productos registrados.<br>
+                                    <a th:href="@{/productos/nuevo(idCat=${categoria.idCat})}" class="btn btn-sm btn-outline-success mt-2">
+                                        <i class="bi bi-plus"></i> Registrar el primer producto
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+
+        <footer th:replace="~{fragments/layout :: footer}"></footer>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>
